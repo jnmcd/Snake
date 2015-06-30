@@ -1,5 +1,4 @@
 package snake;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -12,7 +11,6 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import java.util.Timer;
-
 public class Snake {
     static ArrayList<SnakeSegment> segments = new ArrayList();
     static ArrayList<Directions> keyQueue = new ArrayList();
@@ -99,7 +97,7 @@ class SnakeSegment {
         this.x = x;
         this.y = y;
     }
-    public void draw(Graphics2D g){
+    public void draw(Graphics g){
         g.setColor(Color.GREEN);
         g.fillRect(x * 10, y * 10, width, height);
     }
@@ -141,7 +139,7 @@ class Target {
             valid = !inSnake;
         }
     }
-    public void draw(Graphics2D g){
+    public void draw(Graphics g){
         g.setColor(Color.red);
         g.fillRect(x * 10, y * 10, 10, 10);
     }
@@ -152,10 +150,14 @@ class WindowContent extends JPanel {
     }
     @Override public void paint(Graphics G){
         super.paint(G);
+        Graphics2D g = (Graphics2D) G;
+        G.setColor(Color.white);
+        G.fillRect(0, 0, 600, 600);
         Snake.segments.stream().forEach((ss) -> {
-            ss.draw((Graphics2D) G);
+            ss.draw(G);
         });
-        Snake.target.draw((Graphics2D) G);
+        Snake.target.draw(G);
+        revalidate();
     }
     @Override public void setSize(int x, int y){
         setPreferredSize(new Dimension(x,y));
@@ -184,6 +186,7 @@ class Window extends JFrame {
     public void render(){
         inside.repaint();
         inside.revalidate();
+        inside.updateUI();
     }
     public void popUp(String str){
         JOptionPane.showMessageDialog(this, str);
