@@ -19,16 +19,47 @@ public class Snake {
     static Window window;
     static Target target = new Target();
     static Directions currentDir = Directions.LEFT;
-    static int count = 5;
+    static int size = 5;
+    public static void gameOver(){
+        window.popUp("You lose with a score of " + (segments.size() - 5) / 3);
+        segments.clear();
+        currentDir = Directions.LEFT;
+        for(int i = 0; i < 5; i++)
+            segments.add(new SnakeSegment(30, 30));
+    }
     public static void keyPressed(char key){
-        if(key == 'w')
-            keyQueue.add(Directions.UP);
-        if(key == 'a')
-            keyQueue.add(Directions.LEFT);
-        if(key == 'd')
-            keyQueue.add(Directions.RIGHT);
-        if(key == 's')
-            keyQueue.add(Directions.DOWN);
+        if(key == 'w'){
+            if(keyQueue.size() > 0){
+                if(keyQueue.get(keyQueue.size() - 1) != Directions.DOWN)
+                    keyQueue.add(Directions.UP);
+            }
+            else if(currentDir != Directions.DOWN)
+                keyQueue.add(Directions.UP);
+        }
+        if(key == 'a'){
+            if(keyQueue.size() > 0){
+                if(keyQueue.get(keyQueue.size() - 1) != Directions.RIGHT)
+                    keyQueue.add(Directions.LEFT);
+            }
+            else if(currentDir != Directions.RIGHT)
+                keyQueue.add(Directions.LEFT);
+        }
+        if(key == 'd'){
+            if(keyQueue.size() > 0){
+                if(keyQueue.get(keyQueue.size() - 1) != Directions.LEFT)
+                    keyQueue.add(Directions.RIGHT);
+            }
+            else if(currentDir != Directions.LEFT)
+                keyQueue.add(Directions.RIGHT);
+        }
+        if(key == 's'){
+            if(keyQueue.size() > 0){
+                if(keyQueue.get(keyQueue.size() - 1) != Directions.UP)
+                    keyQueue.add(Directions.DOWN);
+            }
+            else if(currentDir != Directions.UP)
+                keyQueue.add(Directions.DOWN);
+        }
     }
     public static void updates(){
         if(keyQueue.size() > 0){
@@ -37,20 +68,21 @@ public class Snake {
         }
         SnakeSegment oldFirstSegment = segments.get(0);
         segments.add(0, new SnakeSegment(oldFirstSegment.x + currentDir.xChange, oldFirstSegment.y + currentDir.yChange));
-        segments.remove(segments.size() - 1);
+        int indexToRemove = segments.size() - 1;
+        for(; indexToRemove > size - 1; indexToRemove = segments.size() - 1)
+            segments.remove(indexToRemove);
         segments.get(0).checkKillCollisions();
         for(int i = 0; i < segments.size(); i++){
             SnakeSegment ss = segments.get(0);
             ss.checkTargetCollision();
         }
     }
-    public static void main(String[] args) throws Exception{
+    public static void main(String[] args){
         window = new Window();
-        for(int i = 0; i < count; i++){
+        for(int i = 0; i < 5; i++)
             segments.add(new SnakeSegment(30, 30));
-        }
         Timer t = new Timer();
-        t.schedule(new Loop(), 0, 100);
+        t.schedule(new Loop(), 0, 50);
     }
 }
 class Loop extends TimerTask {
@@ -77,23 +109,37 @@ class SnakeSegment {
             if(Snake.segments.get(i).x == x && Snake.segments.get(i).y == y)
                 lose = true;
         }
-        if(x >= 60 || x < 0 || y >= 60 || y < 0)
-            lose = true;
+        if(x >= 60)
+            x -= 60;
+        if(x < 0)
+            x += 60;
+        if(y < 0)
+            y += 60;
+        if(y >= 60)
+            y -= 60;
         if(lose)
-            Snake.window.popUp("You Lose");
+            Snake.gameOver();
     }
     public void checkTargetCollision(){
         if(x == Snake.target.x && y == Snake.target.y){
-            Snake.segments.add(new SnakeSegment(Snake.segments.get(Snake.segments.size() - 1).x - Snake.currentDir.xChange, Snake.segments.get(Snake.segments.size() - 1).y - Snake.currentDir.yChange));
             Snake.target = new Target();
+            Snake.size += 3;
         }
     }
 }
 class Target {
     int x, y;
     public Target(){
-        x = (int) Math.floor(Math.random() * 60);
-        y = (int) Math.floor(Math.random() * 60);
+        boolean valid = false;
+        while(!valid){
+            boolean inSnake = false;
+            x = (int) Math.floor(Math.random() * 60);
+            y = (int) Math.floor(Math.random() * 60);
+            for(SnakeSegment ss : Snake.segments)
+                if(ss.x == x && ss.y == y)
+                    inSnake = true;
+            valid = !inSnake;
+        }
     }
     public void draw(Graphics2D g){
         g.setColor(Color.red);
@@ -137,6 +183,7 @@ class Window extends JFrame {
     }
     public void render(){
         inside.repaint();
+        inside.revalidate();
     }
     public void popUp(String str){
         JOptionPane.showMessageDialog(this, str);
